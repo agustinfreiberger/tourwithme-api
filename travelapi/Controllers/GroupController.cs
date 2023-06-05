@@ -60,16 +60,24 @@ namespace travelapi.Controllers
             return "";
         }
 
-
+    
+        //   Ejemplo body
+        //  {
+        //  "name": "Emma watson",
+        //  "location": {
+        //    "x": -37.32806318572269,
+        //    "y": -59.137273309071716
+        //  }
+        //  }
         [HttpPost]
-        public IActionResult AddUser([FromBody] User user)
+        public IActionResult AgregarUsuario([FromBody] User user) 
         {
             users.Add(user);
             return Created("~api/users/1", user);
         }
 
         [HttpPost]
-        public IActionResult RemoveUser([FromBody] User user)
+        public IActionResult RemoverUsuario([FromBody] User user)
         {
             users.Remove(user);
             return Created("~api/users/1", user);
