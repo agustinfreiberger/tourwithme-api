@@ -4,6 +4,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
+using travelapi.MongoService;
+using travelapi.Settings;
 
 namespace travelapi
 {
@@ -20,8 +22,10 @@ namespace travelapi
         public void ConfigureServices(IServiceCollection services)
         {
 
-            services.AddControllers();
+            services.AddScoped<IMongoService, MongoService.MongoService>();
+            services.AddSingleton(Configuration.GetSection(nameof(MongoSettings)).Get<MongoSettings>());
             services.AddSwaggerGen();
+            services.AddControllers();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -29,14 +33,8 @@ namespace travelapi
         {
             //if (env.IsDevelopment())
             //{
-            //        app.UseSwagger();
-            //        app.UseSwaggerUI(options =>
-            //        {
-            //            options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
-            //            options.RoutePrefix = string.Empty;
-            //        });
+            //    app.UseDeveloperExceptionPage();
             //}
-
 
             app.UseSwagger();
             app.UseSwaggerUI(options =>
