@@ -1,4 +1,5 @@
 ﻿using MongoDB.Driver;
+using NetTopologySuite.Geometries;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +13,7 @@ namespace travelapi.MongoService
         private MongoClient _mongoClient;
         private IMongoDatabase _database;
         private IMongoCollection<User> _usersTable;
+        private IMongoCollection<Poi> _poisTable;
 
 
         public MongoService(MongoSettings mongoSettings)
@@ -19,7 +21,8 @@ namespace travelapi.MongoService
             var settings = MongoClientSettings.FromConnectionString(mongoSettings.ConnectionString);
             _mongoClient = new MongoClient(settings);
             _database = _mongoClient.GetDatabase(mongoSettings.DbName);
-            _usersTable = _database.GetCollection<User>(mongoSettings.CollectionName);
+            _usersTable = _database.GetCollection<User>(mongoSettings.CollectionNameTourists);
+            _poisTable = _database.GetCollection<Poi>(mongoSettings.CollectionNamePlaces);
         }
 
         public string AltaUsuario(User u)
@@ -28,7 +31,7 @@ namespace travelapi.MongoService
             {
                 User user = new User()
                 {
-                    Id = Guid.NewGuid(),
+                    Id = u.Id,
                     Name = u.Name,
                     Latitud = u.Latitud,
                     Longitud = u.Longitud,
@@ -44,7 +47,7 @@ namespace travelapi.MongoService
             }
         }
 
-        public string ActualizarUbicacion(Guid id,double lat, double longitud) {
+        public string ActualizarUbicacion(Guid id, double lat, double longitud) {
             UpdateDefinition<User> update = Builders<User>.Update.Set(x => x.Latitud, lat)
                                                                 .Set(x => x.Longitud, longitud);
 
@@ -64,14 +67,14 @@ namespace travelapi.MongoService
 
         public string ModificarUsuario(User u)
         {
-                UpdateDefinition<User> update = Builders<User>.Update.Set(x => x.Latitud, u.Latitud)
-                                                                .Set(x => x.Longitud, u.Longitud)
-                                                            .Set(x => x.Preferences, u.Preferences)
-                                                            .Set(x => x.Disponible, u.Disponible);
+            UpdateDefinition<User> update = Builders<User>.Update.Set(x => x.Latitud, u.Latitud)
+                                                            .Set(x => x.Longitud, u.Longitud)
+                                                        .Set(x => x.Preferences, u.Preferences)
+                                                        .Set(x => x.Disponible, u.Disponible);
 
-           
-                var result = _usersTable.UpdateOneAsync(x => x.Id == u.Id, update);
-                return u.Id.ToString();
+
+            var result = _usersTable.UpdateOneAsync(x => x.Id == u.Id, update);
+            return u.Id.ToString();
         }
 
         public string EliminarUsuario(Guid promId)
@@ -83,12 +86,12 @@ namespace travelapi.MongoService
             return "No existe el documento";
         }
 
-        public User Get(Guid userId)
+        public User GetUsuario(Guid userId)
         {
             return _usersTable.Find(x => x.Id == userId).FirstOrDefault();
         }
 
-        public List<User> Gets()
+        public List<User> GetUsuarios()
         {
             return _usersTable.Find(FilterDefinition<User>.Empty).ToList();
         }
@@ -99,6 +102,10 @@ namespace travelapi.MongoService
             return _usersTable.Find(filter).ToList();
         }
 
+        public List<Poi> GetPoisCercanos(Coordinate center) {
+            var filter = Builders<Poi>.Filter.Where(x => GreatCircleDistance(center.X, center.Y, x.Longitud, x.Latitud) < 4); //distancia euclidea
+            return _poisTable.Find(filter).ToList();
+        }
 
         private static double Radians(double x)
         {

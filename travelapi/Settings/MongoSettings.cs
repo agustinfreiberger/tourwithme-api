@@ -9,6 +9,8 @@ namespace travelapi.Settings
     {
         public string ConnectionString { get; set; }
         public string DbName { get; set; }
-        public string CollectionName { get; set; }
+        public string CollectionNameTourists { get; set; }
+
+        public string CollectionNamePlaces { get; set; }
     }
 }

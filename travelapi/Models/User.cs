@@ -1,5 +1,4 @@
-﻿using NetTopologySuite.Geometries;
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace travelapi.Models

@@ -1,7 +1,6 @@
-﻿using System;
+﻿using NetTopologySuite.Geometries;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using travelapi.Models;
 
 namespace travelapi.MongoService
@@ -12,12 +11,15 @@ namespace travelapi.MongoService
 
         string ModificarUsuario(User u);
 
-        string EliminarUsuario(Guid promId);
+        string EliminarUsuario(Guid userId);
 
-        User Get(Guid promocionId);
-        List<User> Gets();
+        User GetUsuario(Guid userId);
+        List<User> GetUsuarios();
 
         List<User> GetUsuariosCercanos(double x, double y);
+
+        List<Poi> GetPoisCercanos(Coordinate coordinate);
+
     }
 }
 

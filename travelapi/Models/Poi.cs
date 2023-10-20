@@ -1,10 +1,4 @@
-﻿using NetTopologySuite.Geometries;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace travelapi.Models
+﻿namespace travelapi.Models
 {
     public class Poi
     {
@@ -13,7 +7,9 @@ namespace travelapi.Models
         public string address { get; set; }
         public string category { get; set; }
 
-        public Point coords { get; set; }
+        public double Latitud { get; set; }
+
+        public double Longitud { get; set; }
 
 
         public Poi() { }
