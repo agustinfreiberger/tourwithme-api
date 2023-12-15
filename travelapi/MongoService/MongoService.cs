@@ -35,8 +35,7 @@ namespace travelapi.MongoService
                     Name = u.Name,
                     Latitud = u.Latitud,
                     Longitud = u.Longitud,
-                    Preferences = u.Preferences,
-                    Disponible = u.Disponible
+                    Preferences = u.Preferences
                 };
                 _usersTable.InsertOneAsync(user);
                 return user.Id.ToString();
@@ -69,8 +68,7 @@ namespace travelapi.MongoService
         {
             UpdateDefinition<User> update = Builders<User>.Update.Set(x => x.Latitud, u.Latitud)
                                                             .Set(x => x.Longitud, u.Longitud)
-                                                        .Set(x => x.Preferences, u.Preferences)
-                                                        .Set(x => x.Disponible, u.Disponible);
+                                                        .Set(x => x.Preferences, u.Preferences);
 
 
             var result = _usersTable.UpdateOneAsync(x => x.Id == u.Id, update);

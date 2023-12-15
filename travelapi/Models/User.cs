@@ -11,8 +11,6 @@ namespace travelapi.Models
 
         public double Longitud { get; set; }
 
-        public bool Disponible { get; set; }
-
         public List<PlaceCategoryPreference> Preferences { get; set; }
 
     public User() { }
