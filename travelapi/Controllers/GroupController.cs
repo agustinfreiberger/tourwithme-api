@@ -42,7 +42,7 @@ namespace travelapi.Controllers
 
 
         [HttpGet]
-        public ActionResult<User> GetUsuario(Guid promId) => _usersRepo.GetUsuario(promId);
+        public ActionResult<User> GetUsuario(Guid Id) => _usersRepo.GetUsuario(Id);
 
 
         [HttpGet]
@@ -50,23 +50,9 @@ namespace travelapi.Controllers
 
 
         [HttpGet]
-        public string GetUsuariosCercanos(double x, double y) //url= /group/verusuarioscercanos?x=-37.32084072165888&y=-59.14231321160657
+        public ActionResult<List<User>> GetUsuariosCercanos(double x, double y) //https://localhost:5001/Group/GetUsuariosCercanos?x=-37.32084072165888&y=-59.14231321160657
         {
-            var usuarios = _usersRepo.GetUsuariosCercanos(x,y);
-
-            if (x != 0 && y != 0)
-            {
-
-                if (usuarios.Count > 0)
-                {
-                    return JsonConvert.SerializeObject(usuarios, new JsonSerializerSettings
-                    {
-                        ReferenceLoopHandling = ReferenceLoopHandling.Ignore
-                    });
-                }
-            }
-            return "";
+            return _usersRepo.GetUsuariosCercanos(x, y);
         }
-    
     }
 }

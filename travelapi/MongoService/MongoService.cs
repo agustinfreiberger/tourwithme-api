@@ -1,4 +1,5 @@
-﻿using MongoDB.Driver;
+﻿using MongoDB.Bson;
+using MongoDB.Driver;
 using NetTopologySuite.Geometries;
 using System;
 using System.Collections.Generic;
@@ -14,6 +15,8 @@ namespace travelapi.MongoService
         private IMongoDatabase _database;
         private IMongoCollection<User> _usersTable;
         private IMongoCollection<Poi> _poisTable;
+        private FilterDefinition<User> _filter;
+
 
 
         public MongoService(MongoSettings mongoSettings)
@@ -23,11 +26,14 @@ namespace travelapi.MongoService
             _database = _mongoClient.GetDatabase(mongoSettings.DbName);
             _usersTable = _database.GetCollection<User>(mongoSettings.CollectionNameTourists);
             _poisTable = _database.GetCollection<Poi>(mongoSettings.CollectionNamePlaces);
+
         }
 
         public string AltaUsuario(User u)
         {
-            if (u != null)
+            this._filter = Builders<User>.Filter.Eq("name", u.Name);
+
+            if (u != null && (_usersTable.Find(_filter).ToList().Count == 0))
             {
                 User user = new User()
                 {
@@ -42,7 +48,7 @@ namespace travelapi.MongoService
             }
             else
             {
-                return "El usuario fue null";
+                return "null";
             }
         }
 
@@ -96,8 +102,14 @@ namespace travelapi.MongoService
 
         public List<User> GetUsuariosCercanos(double lat, double longitud)
         {
-            var filter = Builders<User>.Filter.Where(x => GreatCircleDistance(lat, longitud, x.Latitud, x.Longitud) < 4); //distancia euclidea
-            return _usersTable.Find(filter).ToList();
+            var usuariosCercanos = new List<User>();
+            foreach (var usuario in _usersTable.Find(FilterDefinition<User>.Empty).ToList())
+            {
+                if (GreatCircleDistance(lat, longitud, usuario.Latitud, usuario.Longitud) < 4) {
+                    usuariosCercanos.Add(usuario);
+                }
+            }
+            return usuariosCercanos;
         }
 
         public List<Poi> GetPoisCercanos(Coordinate center) {
