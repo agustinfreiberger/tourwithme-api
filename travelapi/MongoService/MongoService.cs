@@ -1,6 +1,4 @@
-﻿using MongoDB.Bson;
-using MongoDB.Driver;
-using NetTopologySuite.Geometries;
+﻿using MongoDB.Driver;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,7 +12,6 @@ namespace travelapi.MongoService
         private MongoClient _mongoClient;
         private IMongoDatabase _database;
         private IMongoCollection<User> _usersTable;
-        private IMongoCollection<Poi> _poisTable;
         private FilterDefinition<User> _filter;
 
 
@@ -25,26 +22,31 @@ namespace travelapi.MongoService
             _mongoClient = new MongoClient(settings);
             _database = _mongoClient.GetDatabase(mongoSettings.DbName);
             _usersTable = _database.GetCollection<User>(mongoSettings.CollectionNameTourists);
-            _poisTable = _database.GetCollection<Poi>(mongoSettings.CollectionNamePlaces);
 
         }
 
         public string AltaUsuario(User u)
         {
-            this._filter = Builders<User>.Filter.Eq("name", u.Name);
+            this._filter = Builders<User>.Filter.Eq("Name", u.Name);
 
-            if (u != null && (_usersTable.Find(_filter).ToList().Count == 0))
+            if (u != null)
             {
-                User user = new User()
+                if (_usersTable.Find(_filter).ToList().Count == 0) { 
+                    User user = new User()
+                    {
+                        Id = u.Id,
+                        Name = u.Name,
+                        Latitud = u.Latitud,
+                        Longitud = u.Longitud,
+                        Preferences = u.Preferences
+                    };
+                    _usersTable.InsertOneAsync(user);
+                    return user.Id.ToString();
+                }
+                else
                 {
-                    Id = u.Id,
-                    Name = u.Name,
-                    Latitud = u.Latitud,
-                    Longitud = u.Longitud,
-                    Preferences = u.Preferences
-                };
-                _usersTable.InsertOneAsync(user);
-                return user.Id.ToString();
+                    return "existe";
+                }
             }
             else
             {
@@ -90,9 +92,9 @@ namespace travelapi.MongoService
             return "No existe el documento";
         }
 
-        public User GetUsuario(Guid userId)
+        public User GetUsuario(string name)
         {
-            return _usersTable.Find(x => x.Id == userId).FirstOrDefault();
+            return _usersTable.Find(x => x.Name == name).FirstOrDefault();
         }
 
         public List<User> GetUsuarios()
@@ -100,22 +102,65 @@ namespace travelapi.MongoService
             return _usersTable.Find(FilterDefinition<User>.Empty).ToList();
         }
 
-        public List<User> GetUsuariosCercanos(double lat, double longitud)
-        {
+        public List<User> GetUsuariosCercanosYSimilares(Guid userId, double lat, double longitud) {
+
+            var usuariosSimilares = new List<User>();
+
+            var myUser = _usersTable.Find(x => x.Id == userId).FirstOrDefault();
+            var allUsers = _usersTable.Find(x => x.Id != userId).ToList();
+
             var usuariosCercanos = new List<User>();
-            foreach (var usuario in _usersTable.Find(FilterDefinition<User>.Empty).ToList())
+            foreach (var usuario in allUsers)
             {
-                if (GreatCircleDistance(lat, longitud, usuario.Latitud, usuario.Longitud) < 4) {
+                if (GreatCircleDistance(lat, longitud, usuario.Latitud, usuario.Longitud) < 4)
+                {
                     usuariosCercanos.Add(usuario);
                 }
             }
-            return usuariosCercanos;
+
+            double similarity = int.MaxValue;
+
+            //Obtengo la menor similitud
+            foreach (var user in usuariosCercanos)
+            {
+                if (similarity > CalculateSimilarity(myUser.Preferences, user.Preferences)) {
+                    similarity = CalculateSimilarity(myUser.Preferences, user.Preferences);
+                }
+            }
+
+            //Filtro los usuarios cercanos por similitud
+            foreach (var user in usuariosCercanos)
+            {
+                if (similarity < CalculateSimilarity(myUser.Preferences, user.Preferences)) 
+                {
+                    usuariosSimilares.Add(user);
+                }
+                
+                if (usuariosSimilares.Count() == 3)
+                { //Supongo un tamaño de grupo maximo de 3 por el tamaño de muestra de la experimentación
+                    return usuariosSimilares;
+                }
+            }
+
+            //Si no llego a completar el cupo, completo con usuarios cercanos
+            if (usuariosSimilares.Count() < 3) {
+                foreach (var user in usuariosCercanos)
+                {
+                    if (!usuariosSimilares.Any(x => x.Id == user.Id))
+                    {
+                        usuariosSimilares.Add(user);
+                    }
+
+                    if (usuariosSimilares.Count() == 3)
+                    { //Supongo un tamaño de grupo maximo de 3 por el tamaño de muestra de la experimentación
+                        return usuariosSimilares;
+                    }
+                }
+            }
+
+            return usuariosSimilares;
         }
 
-        public List<Poi> GetPoisCercanos(Coordinate center) {
-            var filter = Builders<Poi>.Filter.Where(x => GreatCircleDistance(center.X, center.Y, x.Longitud, x.Latitud) < 4); //distancia euclidea
-            return _poisTable.Find(filter).ToList();
-        }
 
         private static double Radians(double x)
         {
@@ -141,5 +186,39 @@ namespace travelapi.MongoService
             return dist;
         }
 
+        static double CalculateSimilarity(List<PlaceCategoryPreference> preferences1, List<PlaceCategoryPreference> preferences2)
+        {
+            var categories1 = preferences1.ToDictionary(p => p.Placecategory, p => p.Preference);
+            var categories2 = preferences2.ToDictionary(p => p.Placecategory, p => p.Preference);
+
+            var commonCategories = categories1.Keys.Intersect(categories2.Keys).ToList();
+            if (commonCategories.Count == 0)
+                return 0; // No hay categorías en común, similitud es cero.
+
+
+            double dotProduct = 0;
+            double magnitude1 = 0;
+            double magnitude2 = 0;
+
+            foreach (var categoria in commonCategories)
+            {
+                double valorPreferencia1 = SmoothCosine(categories1[categoria]);
+                double valorPreferencia2 = SmoothCosine(categories2[categoria]);
+
+                dotProduct += valorPreferencia1 * valorPreferencia2;
+                magnitude1 += valorPreferencia1 * valorPreferencia1;
+                magnitude2 += valorPreferencia2 * valorPreferencia2;
+            }
+
+            if (magnitude1 == 0 || magnitude2 == 0)
+                return 0; // Evitar división por cero
+
+            return dotProduct / (Math.Sqrt(magnitude1) * Math.Sqrt(magnitude2));
+        }
+
+        static double SmoothCosine(double x)
+        {
+            return (1 - Math.Cos(x * Math.PI)) / 2;
+        }
     }
 }

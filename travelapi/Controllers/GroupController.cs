@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using travelapi.Models;
@@ -42,17 +41,14 @@ namespace travelapi.Controllers
 
 
         [HttpGet]
-        public ActionResult<User> GetUsuario(Guid Id) => _usersRepo.GetUsuario(Id);
+        public ActionResult<User> GetUsuario(string name) => _usersRepo.GetUsuario(name);
 
 
         [HttpGet]
         public ActionResult<List<User>> GetUsuarios() => _usersRepo.GetUsuarios();
 
-
         [HttpGet]
-        public ActionResult<List<User>> GetUsuariosCercanos(double x, double y) //https://localhost:5001/Group/GetUsuariosCercanos?x=-37.32084072165888&y=-59.14231321160657
-        {
-            return _usersRepo.GetUsuariosCercanos(x, y);
-        }
+        public ActionResult<List<User>> GetUsuariosCercanosYSimilares(Guid Id, double lat, double longitud) => _usersRepo.GetUsuariosCercanosYSimilares(Id, lat, longitud);
+
     }
 }
