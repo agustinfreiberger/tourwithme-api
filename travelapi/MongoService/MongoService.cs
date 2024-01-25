@@ -36,6 +36,7 @@ namespace travelapi.MongoService
                     {
                         Id = u.Id,
                         Name = u.Name,
+                        Age = u.Age,
                         Latitud = u.Latitud,
                         Longitud = u.Longitud,
                         Preferences = u.Preferences
@@ -74,7 +75,8 @@ namespace travelapi.MongoService
 
         public string ModificarUsuario(User u)
         {
-            UpdateDefinition<User> update = Builders<User>.Update.Set(x => x.Latitud, u.Latitud)
+            UpdateDefinition<User> update = Builders<User>.Update.Set(x => x.Age, u.Age)
+                                                                .Set(x => x.Latitud, u.Latitud)
                                                             .Set(x => x.Longitud, u.Longitud)
                                                         .Set(x => x.Preferences, u.Preferences);
 

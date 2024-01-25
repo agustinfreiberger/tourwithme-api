@@ -7,6 +7,7 @@ namespace travelapi.Models
     {
         public Guid Id { get; set; }
         public string Name { get; set; }
+        public int Age { get; set; }
         public double Latitud { get; set; }
 
         public double Longitud { get; set; }
