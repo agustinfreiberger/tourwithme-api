@@ -27,7 +27,7 @@ namespace travelapi.MongoService
 
         public string AltaUsuario(User u)
         {
-            this._filter = Builders<User>.Filter.Eq("Name", u.Name);
+            this._filter = Builders<User>.Filter.Eq("_id", u.Id);
 
             if (u != null)
             {
