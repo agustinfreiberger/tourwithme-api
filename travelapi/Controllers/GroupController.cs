@@ -34,9 +34,9 @@ namespace travelapi.Controllers
 
       
         [HttpDelete]
-        public ActionResult<string> EliminarUsuario(Guid id)
+        public ActionResult<string> EliminarUsuario(string name)
         {
-            return _usersRepo.EliminarUsuario(id);
+            return _usersRepo.EliminarUsuario(name);
         }
 
 
@@ -48,7 +48,7 @@ namespace travelapi.Controllers
         public ActionResult<List<User>> GetUsuarios() => _usersRepo.GetUsuarios();
 
         [HttpGet]
-        public ActionResult<List<User>> GetUsuariosCercanosYSimilares(Guid Id, double lat, double longitud) => _usersRepo.GetUsuariosCercanosYSimilares(Id, lat, longitud);
+        public ActionResult<List<User>> GetUsuariosCercanosYSimilares(string name, double lat, double longitud) => _usersRepo.GetUsuariosCercanosYSimilares(name, lat, longitud);
 
     }
 }

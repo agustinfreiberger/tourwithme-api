@@ -10,12 +10,12 @@ namespace travelapi.MongoService
 
         string ModificarUsuario(User u);
 
-        string EliminarUsuario(Guid userId);
+        string EliminarUsuario(string name);
 
         User GetUsuario(string name);
         List<User> GetUsuarios();
 
-        List<User> GetUsuariosCercanosYSimilares(Guid userId, double lat, double longitud);
+        List<User> GetUsuariosCercanosYSimilares(string name, double lat, double longitud);
 
     }
 }

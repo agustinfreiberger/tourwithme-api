@@ -27,7 +27,7 @@ namespace travelapi.MongoService
 
         public string AltaUsuario(User u)
         {
-            this._filter = Builders<User>.Filter.Eq("_id", u.Id);
+            this._filter = Builders<User>.Filter.Eq("Name", u.Name);
 
             if (u != null)
             {
@@ -46,31 +46,32 @@ namespace travelapi.MongoService
                 }
                 else
                 {
-                    return "existe";
+                    ModificarUsuario(u);
+                    return "existe y se modifico";
                 }
             }
             else
             {
-                return "null";
+                return "usuario es null";
             }
         }
 
-        public string ActualizarUbicacion(Guid id, double lat, double longitud) {
+        public string ActualizarUbicacion(string name, double lat, double longitud) {
             UpdateDefinition<User> update = Builders<User>.Update.Set(x => x.Latitud, lat)
                                                                 .Set(x => x.Longitud, longitud);
 
 
-            var result = _usersTable.UpdateOneAsync(x => x.Id == id, update);
-            return id.ToString();
+            var result = _usersTable.UpdateOneAsync(x => x.Name == name, update);
+            return name.ToString();
         }
 
-        public string ActualizarPreferencias(Guid id, List<PlaceCategoryPreference> preferencias)
+        public string ActualizarPreferencias(string name, List<PlaceCategoryPreference> preferencias)
         {
             UpdateDefinition<User> update = Builders<User>.Update.Set(x => x.Preferences, preferencias);
 
 
-            var result = _usersTable.UpdateOneAsync(x => x.Id == id, update);
-            return id.ToString();
+            var result = _usersTable.UpdateOneAsync(x => x.Name == name, update);
+            return name.ToString();
         }
 
         public string ModificarUsuario(User u)
@@ -81,13 +82,13 @@ namespace travelapi.MongoService
                                                         .Set(x => x.Preferences, u.Preferences);
 
 
-            var result = _usersTable.UpdateOneAsync(x => x.Id == u.Id, update);
+            var result = _usersTable.UpdateOneAsync(x => x.Name == u.Name, update);
             return u.Id.ToString();
         }
 
-        public string EliminarUsuario(Guid promId)
+        public string EliminarUsuario(string name)
         {
-            if (_usersTable.DeleteOne(x => x.Id == promId).DeletedCount > 0)
+            if (_usersTable.DeleteOne(x => x.Name == name).DeletedCount > 0)
             {
                 return "Borrado con exito";
             }
@@ -104,12 +105,12 @@ namespace travelapi.MongoService
             return _usersTable.Find(FilterDefinition<User>.Empty).ToList();
         }
 
-        public List<User> GetUsuariosCercanosYSimilares(Guid userId, double lat, double longitud) {
+        public List<User> GetUsuariosCercanosYSimilares(string name, double lat, double longitud) {
 
             var usuariosSimilares = new List<User>();
 
-            var myUser = _usersTable.Find(x => x.Id == userId).FirstOrDefault();
-            var allUsers = _usersTable.Find(x => x.Id != userId).ToList();
+            var myUser = _usersTable.Find(x => x.Name == name).FirstOrDefault();
+            var allUsers = _usersTable.Find(x => x.Name != name).ToList();
 
             var usuariosCercanos = new List<User>();
             foreach (var usuario in allUsers)
@@ -162,7 +163,6 @@ namespace travelapi.MongoService
 
             return usuariosSimilares;
         }
-
 
         private static double Radians(double x)
         {
