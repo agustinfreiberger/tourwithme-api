@@ -115,7 +115,7 @@ namespace travelapi.MongoService
             var usuariosCercanos = new List<User>();
             foreach (var usuario in allUsers)
             {
-                if (GreatCircleDistance(lat, longitud, usuario.Latitud, usuario.Longitud) < 4)
+                if (CalculateManhattanDistance(lat, longitud, usuario.Latitud, usuario.Longitud) < 4)
                 {
                     usuariosCercanos.Add(usuario);
                 }
@@ -169,23 +169,23 @@ namespace travelapi.MongoService
             return x * Math.PI / 180;
         }
 
-        private static double GreatCircleDistance(double lon1, double lat1, double lon2, double lat2)
+        public static double CalculateManhattanDistance(double lat1, double lon1, double lat2, double lon2)
         {
-            double R = 6371e3; // m
+            // Calcular las diferencias absolutas de latitud y longitud
+            double latDifference = Math.Abs(lat1 - lat2);
+            double lonDifference = Math.Abs(lon1 - lon2);
 
-            double sLat1 = Math.Sin(Radians(lat1));
-            double sLat2 = Math.Sin(Radians(lat2));
-            double cLat1 = Math.Cos(Radians(lat1));
-            double cLat2 = Math.Cos(Radians(lat2));
-            double cLon = Math.Cos(Radians(lon1) - Radians(lon2));
+            // Convertir las diferencias de grados a kilómetros aproximadamente (1 grado de latitud ≈ 111 km y 1 grado de longitud depende de la latitud)
+            double kmPerDegreeLat = 111.32; // Aproximadamente 111.32 km por cada grado de latitud
+            double kmPerDegreeLon = 111.32 * Math.Cos(Radians((lat1 + lat2) / 2)); // Ajuste según la latitud promedio
 
-            double cosD = sLat1 * sLat2 + cLat1 * cLat2 * cLon;
+            double latDistanceKm = latDifference * kmPerDegreeLat;
+            double lonDistanceKm = lonDifference * kmPerDegreeLon;
 
-            double d = Math.Acos(cosD);
+            // Calcular la distancia de Manhattan
+            double manhattanDistance = latDistanceKm + lonDistanceKm;
 
-            double dist = (R * d) / 1000; //paso metros a Km
-
-            return dist;
+            return manhattanDistance;
         }
 
         static double CalculateSimilarity(List<PlaceCategoryPreference> preferences1, List<PlaceCategoryPreference> preferences2)
